@@ -318,7 +318,7 @@ const SceneCanvas = forwardRef<SceneHandle, Props>(
       };
     }, []);
 
-    return <div ref={mountRef} className="w-full h-full" />;
+    return <div ref={mountRef} className="w-full h-full overflow-hidden" />;
   }
 );
 // dj
