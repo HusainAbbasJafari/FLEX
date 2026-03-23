@@ -1,65 +1,152 @@
-import Image from "next/image";
+"use client";
+
+import { useEffect, useRef, useState } from "react";
+import SceneCanvas, { SceneHandle } from "@/components/canvas/SceneCanvas";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 
 export default function Home() {
+  const sceneRef = useRef<SceneHandle>(null);
+  const [prompt, setPrompt] = useState("");
+  const [selected, setSelected] = useState<any>(null);
+
+  const handleGenerate = () => {
+    const text = prompt.toLowerCase();
+
+    if (text.includes("cube")) sceneRef.current?.addCube();
+    if (text.includes("sphere")) sceneRef.current?.addSphere();
+  };
+
+  useEffect(() => {
+    const handleKey = (e: KeyboardEvent) => {
+      if (e.ctrlKey && e.key === "d") {
+        e.preventDefault();
+        sceneRef.current?.duplicateSelected();
+      }
+    };
+
+    window.addEventListener("keydown", handleKey);
+
+    return () => window.removeEventListener("keydown", handleKey);
+  }, []);
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
+    <div className="h-screen flex flex-col">
+
+      {/* 🔥 TOPBAR */}
+      <div className="h-14 border-b flex items-center px-4 gap-2">
+        <Button onClick={() => sceneRef.current?.addCube()}>
+          Add Cube
+        </Button>
+
+        <Button onClick={() => sceneRef.current?.addSphere()}>
+          Add Sphere
+        </Button>
+
+        <Button
+          onClick={() => {
+            const data = sceneRef.current?.exportScene();
+            localStorage.setItem("scene", JSON.stringify(data));
+          }}
+        >
+          Save
+        </Button>
+
+        <Button
+          onClick={() => {
+            const data = localStorage.getItem("scene");
+            if (data) {
+              sceneRef.current?.importScene(JSON.parse(data));
+            }
+          }}
+        >
+          Load
+        </Button>
+
+        <div className="ml-auto flex gap-2">
+          <Input
+            placeholder="AI Prompt..."
+            value={prompt}
+            onChange={(e) => setPrompt(e.target.value)}
+            className="w-64"
+          />
+          <Button onClick={handleGenerate}>Generate</Button>
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
+      </div>
+
+      {/* 🔥 MAIN LAYOUT */}
+      <div className="flex flex-1">
+
+        {/* LEFT SIDEBAR */}
+        <div className="w-60 border-r p-4">
+          <h3 className="font-semibold mb-2">Assets</h3>
+
+          <Button
+            className="w-full mb-2"
+            onClick={() => sceneRef.current?.addCube()}
           >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
+            Cube
+          </Button>
+
+          <Button
+            className="w-full"
+            onClick={() => sceneRef.current?.addSphere()}
           >
-            Documentation
-          </a>
+            Sphere
+          </Button>
         </div>
-      </main>
+
+        {/* CANVAS */}
+        <div className="flex-1">
+          <SceneCanvas ref={sceneRef} onSelect={setSelected} />
+        </div>
+
+        {/* RIGHT SIDEBAR */}
+        <div className="w-72 border-l p-4">
+          <h3 className="font-semibold mb-2">Inspector</h3>
+
+          {selected ? (
+            <div className="space-y-2">
+
+              <div>
+                <label>X</label>
+                <input
+                  type="number"
+                  value={selected.position.x}
+                  onChange={(e) => {
+                    selected.position.x = Number(e.target.value);
+                  }}
+                />
+              </div>
+
+              <div>
+                <label>Y</label>
+                <input
+                  type="number"
+                  value={selected.position.y}
+                  onChange={(e) => {
+                    selected.position.y = Number(e.target.value);
+                  }}
+                />
+              </div>
+
+              <div>
+                <label>Z</label>
+                <input
+                  type="number"
+                  value={selected.position.z}
+                  onChange={(e) => {
+                    selected.position.z = Number(e.target.value);
+                  }}
+                />
+              </div>
+
+            </div>
+          ) : (
+            <p>Select object to edit</p>
+          )}
+        </div>
+
+      </div>
     </div>
   );
 }
