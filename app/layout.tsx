@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Geist, Geist_Mono, Inter } from "next/font/google";
 import "./globals.css";
 import { GlobalProvider } from "@/providers/global-provider";
 
@@ -13,8 +13,13 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
+const syne = Inter({  // Using Inter as fallback, but we'll use CSS import
+  variable: "--font-syne",
+  subsets: ["latin"],
+});
+
 export const metadata: Metadata = {
-  title: "AI 3D Builder",
+  title: "FLEX — AI 3D Builder",
   description: "Generate 3D scenes using AI",
 };
 
@@ -26,7 +31,7 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${geistSans.variable} ${geistMono.variable} h-full`}
+      className={`${geistSans.variable} ${geistMono.variable} ${syne.variable} h-full dark`}
       suppressHydrationWarning
     >
       <body className="min-h-full flex flex-col bg-background text-foreground">

@@ -215,12 +215,12 @@ const SceneCanvas = forwardRef<SceneHandle, Props>(
       scene.add(transformControls);
       transformRef.current = transformControls;
 
-      transformControls.addEventListener("dragging-changed", (e: any) => {
+      (transformControls as any).addEventListener("dragging-changed", (e: any) => {
         controls.enabled = !e.value;
       });
 
       // SNAP GRID
-      transformControls.addEventListener("objectChange", () => {
+      (transformControls as any).addEventListener("objectChange", () => {
         const obj = transformControls.object as THREE.Mesh;
         if (!obj) return;
 
